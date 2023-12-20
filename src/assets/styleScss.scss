@@ -1,0 +1,86 @@
+@mixin font($font-family, $font-style, $font-weight, $font-src) {
+  @font-face {
+    font-family: $font-family;
+    font-weight: $font-weight;
+    font-style: $font-style;
+    src: url($font-src + ".eot");
+    src: url($font-src + ".eot?#iefix") format("embedded-opentype"),
+      url($font-src + ".woff") format("woff"),
+      url($font-src + ".ttf") format("truetype");
+    // , url($font-src + ".woff2") format("woff2")
+  }
+}
+
+@include font("Shabnam", normal, Thin, "./fonts/Shabnam/Shabnam-Thin-FD");
+@include font("Shabnam", normal, Normal, "./fonts/Shabnam/Shabnam-FD");
+@include font("Shabnam", normal, Light, "./fonts/Shabnam/Shabnam-Light-FD");
+@include font("Shabnam", normal, Medium, "./fonts/Shabnam/Shabnam-Medium-FD");
+@include font("Shabnam", normal, Bold, "./fonts/Shabnam/Shabnam-Bold-FD");
+
+:root {
+  --font-shabnam: "Shabnam";
+  --color-blue: #0178fa;
+  --color-orange: #fa8301;
+  --color-dark-blue: #015abc;
+  --color-black: #0c0c0c;
+  --color-text-gray: #757575;
+  --color-bg-gray: #f9f9f9;
+  --color-white: #ffffff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-shabnam) !important;
+}
+
+body {
+  direction: rtl;
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--color-black);
+}
+.colorGreen {
+  color: green;
+}
+.colorRed {
+  color: red;
+}
+
+.mt10 {
+  margin-top: 10px;
+}
+.ant-input-number {
+  width: 100%;
+}
+
+.LoginPage {
+  background-color: #0c0c0c;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  form {
+    background-color: #f9f9f9;
+    padding: 40px 60px;
+    border-radius: 15px;
+  }
+}
+
+.link-button-blue {
+  background-color: #0178fa;
+  padding: 8px 10px;
+  color: #fff;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.branches {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
