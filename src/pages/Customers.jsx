@@ -8,22 +8,19 @@ import {
   Modal,
   notification,
 } from "antd";
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import api_service from "../sevices/api.jsx";
 import { convertDate } from "../utils/index.jsx";
-import { Link } from "react-router-dom";
 import { ExclamationCircleFilled } from "@ant-design/icons";
 const Customers = () => {
   const [usersData, setUsersData] = useState("");
-  const [api, contextHolder] = notification.useNotification();
   const [roles, setRoles] = useState("");
   const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(true);
   const [spinUserLoading, setSpinUserLoading] = useState(true);
   const [spinRoleLoading, setSpinRoleLoading] = useState(true);
-
+  const [api, contextHolder] = notification.useNotification();
   const { confirm } = Modal;
-
   const openNotificationWithIcon = (type, title, message) => {
     api[type]({
       message: title,
@@ -91,9 +88,8 @@ const Customers = () => {
 
   //fetch data
   useEffect(() => {
-    //application
     setSpinRoleLoading(false);
-
+    //application
     api_service.API_GetRole("").then((result) => {
       console.log(result);
       let items = [];
@@ -116,12 +112,12 @@ const Customers = () => {
 
   //fetch data
   useEffect(() => {
-    setSpinUserLoading(true);
     //application
     api_service.API_GetUsers(role).then((result) => {
+      setSpinUserLoading(false);
       let items = [];
       result &&
-        result?.data?.data?.users?.map((item) => {
+        result?.data.data.users.map((item) => {
           items.push({
             userId: item.userId,
             fullName: item.fullName,
@@ -136,9 +132,9 @@ const Customers = () => {
         });
       result && console.log(items);
       setUsersData(items);
-      setSpinUserLoading(false);
     });
-  }, [spinRoleLoading, role]);
+    setLoading(false);
+  }, [role, loading]);
 
   const showDeleteConfirm = (record) => {
     console.log(record);
@@ -162,8 +158,10 @@ const Customers = () => {
   const DeleteUser = (id) => {
     setSpinUserLoading(false);
     api_service.API_DeleteUser(id).then((result) => {
-      if (result?.isSuccess) {
+      if (result.data.isSuccess) {
         openNotificationWithIcon("success", "موفق!", result.data.message);
+        setSpinUserLoading(true);
+        setLoading(true);
       } else {
         openNotificationWithIcon("error", "خطا!", result.data.message);
       }
@@ -171,10 +169,12 @@ const Customers = () => {
   };
 
   const changeRole = (e) => {
+    setSpinUserLoading(true);
     setRole(e);
   };
   return (
     <>
+      {contextHolder}
       <Spin spinning={spinRoleLoading} tip="در حال بارگذاری...">
         <Form.Item
           name="branchId"

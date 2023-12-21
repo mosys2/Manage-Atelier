@@ -38,6 +38,29 @@ export default {
       url: `Admin/${userId}`,
     }),
 
+  API_DeleteAtelierBase: (atelierBaseId) =>
+    instance({
+      method: "DELETE",
+      url: `AtelierBase/${atelierBaseId}`,
+    }),
+
+  API_DeleteBranch: (branchId) =>
+    instance({
+      method: "DELETE",
+      url: `Branch/${branchId}`,
+    }),
+
+  API_PostAtelierChangeStatus: (atelierId) =>
+    instance({
+      method: "POST",
+      url: `AtelierBase/ChangeStatus/${atelierId}`,
+    }),
+  API_PostBranchChangeStatus: (branchId) =>
+    instance({
+      method: "POST",
+      url: `/Branch/ChangeStatus/${branchId}`,
+    }),
+
   API_PostAdmin: (data) =>
     instance({
       method: "POST",

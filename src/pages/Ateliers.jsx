@@ -1,7 +1,17 @@
-import { Space, Table, Spin, Button } from "antd";
-import React, { useEffect, useState } from "react";
+import {
+  Space,
+  Table,
+  Spin,
+  Button,
+  Modal,
+  notification,
+  Switch,
+  message,
+} from "antd";
+import { useEffect, useState } from "react";
+import { ExclamationCircleFilled } from "@ant-design/icons";
 
-import api from "../sevices/api.jsx";
+import api_service from "../sevices/api.jsx";
 import { convertDate } from "../utils/index.jsx";
 import { Link } from "react-router-dom";
 
@@ -9,8 +19,14 @@ const Ateliers = () => {
   const [ateliersData, setAteliersData] = useState("");
   const [loading, setLoading] = useState(true);
   const [spinLoading, setSpinLoading] = useState(true);
-  let [ticker, setTicker] = React.useState("");
-
+  const [api, contextHolder] = notification.useNotification();
+  const { confirm } = Modal;
+  const openNotificationWithIcon = (type, title, message) => {
+    api[type]({
+      message: title,
+      description: message,
+    });
+  };
   const columns = [
     {
       title: "نام آتلیه",
@@ -28,16 +44,17 @@ const Ateliers = () => {
       title: "وضعیت",
       key: "status",
       dataIndex: "status",
-      render: (_, record) =>
-        record.status ? (
-          <>
-            <span style={{ marginRight: 5, color: "green" }}>فعال</span>
-          </>
-        ) : (
-          <>
-            <span style={{ marginRight: 5, color: "red" }}>غیرفعال</span>
-          </>
-        ),
+      render: (_, record) => {
+        return (
+          <Switch
+            onChange={() => changeStatus(record.id)}
+            className="ant-switch-me"
+            defaultChecked={record.status == true ? true : false}
+            checkedChildren="فعال"
+            unCheckedChildren="غیرفعال"
+          />
+        );
+      },
     },
     {
       title: "تعداد شعبه ها",
@@ -51,21 +68,24 @@ const Ateliers = () => {
         <>
           <Link to={"/branches/" + record.id}>
             <Button style={{ marginLeft: 20 }}>
-              مدیریت شعبه ها (‍ ‍{record.branchCount} )
+              مدیریت شعبه ها (‍ ‍{record.branchCount})
             </Button>
           </Link>
           <Space size="middle">
-            <a>ویرایش</a>
-            <a>حذف</a>
+            <Button>ویرایش</Button>
+            <Button danger onClick={() => showDeleteConfirm(record)}>
+              حذف
+            </Button>
           </Space>
         </>
       ),
     },
   ];
+
   //fetch data
   useEffect(() => {
     //application
-    api.API_Ateliers(ticker).then((result) => {
+    api_service.API_Ateliers("").then((result) => {
       setSpinLoading(false);
       let items = [];
       result &&
@@ -75,7 +95,6 @@ const Ateliers = () => {
             name: item.name,
             status: item.status,
             branchCount: item.branchCount,
-
             insertTime: item?.insertTime
               ? convertDate({ date: item?.insertTime, format: "jDate2" })
               : "-",
@@ -87,10 +106,53 @@ const Ateliers = () => {
     setLoading(false);
   }, [loading]);
 
+  const showDeleteConfirm = (record) => {
+    console.log(record);
+    setSpinLoading(true);
+    confirm({
+      title: "آیا مطمئن هستید؟",
+      icon: <ExclamationCircleFilled />,
+      content: `حذف آتلیه ${record.name}`,
+      okText: "بلی",
+      okType: "danger",
+      cancelText: "خیر",
+      onOk() {
+        DeleteAtelierBase(record.id);
+      },
+      onCancel() {
+        setSpinLoading(false);
+      },
+    });
+  };
+  const DeleteAtelierBase = (id) => {
+    setSpinLoading(false);
+    api_service.API_DeleteAtelierBase(id).then((result) => {
+      if (result.data.isSuccess) {
+        openNotificationWithIcon("success", "موفق!", result.data.message);
+        setSpinLoading(true);
+        setLoading(true);
+      } else {
+        openNotificationWithIcon("error", "خطا!", result.data.message);
+      }
+    });
+  };
+  const changeStatus = (id) => {
+    setSpinLoading(false);
+    api_service.API_PostAtelierChangeStatus(id).then((result) => {
+      if (result.data.isSuccess) {
+        message.success(result.data.message);
+      } else {
+        message.success(result.data.message);
+      }
+    });
+  };
   return (
-    <Spin spinning={spinLoading} tip="در حال بارگذاری...">
-      <Table pagination={false} columns={columns} dataSource={ateliersData} />
-    </Spin>
+    <>
+      {contextHolder}
+      <Spin spinning={spinLoading} tip="در حال بارگذاری...">
+        <Table pagination={false} columns={columns} dataSource={ateliersData} />
+      </Spin>
+    </>
   );
 };
 export default Ateliers;

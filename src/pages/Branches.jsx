@@ -1,11 +1,22 @@
-import { Space, Table, Spin, Button, Avatar, Card } from "antd";
+import {
+  Space,
+  Spin,
+  Button,
+  Avatar,
+  Card,
+  Modal,
+  notification,
+  Switch,
+  message,
+} from "antd";
 import React, { useEffect, useState } from "react";
 import {
   EllipsisOutlined,
   EditOutlined,
-  SettingOutlined,
+  DeleteOutlined,
+  ExclamationCircleFilled,
 } from "@ant-design/icons";
-import api from "../sevices/api.jsx";
+import api_service from "../sevices/api.jsx";
 import { convertDate } from "../utils/index.jsx";
 import { Link, useParams } from "react-router-dom";
 import AddBranch from "./AddBranch.jsx";
@@ -68,16 +79,23 @@ const columns = [
 ];
 
 export const Branches = () => {
-  const params = useParams(); 
+  const params = useParams();
   let [ticker, setTicker] = React.useState(params.id);
   const [ateliersData, setAteliersData] = useState();
   const [loading, setLoading] = useState(true);
   const [spinLoading, setSpinLoading] = useState(true);
-
+  const [api, contextHolder] = notification.useNotification();
+  const { confirm } = Modal;
+  const openNotificationWithIcon = (type, title, message) => {
+    api[type]({
+      message: title,
+      description: message,
+    });
+  };
   //fetch data
   useEffect(() => {
     //application
-    api.API_Branches(ticker).then((result) => {
+    api_service.API_Branches(ticker).then((result) => {
       setSpinLoading(false);
       let items = [];
       result &&
@@ -100,8 +118,52 @@ export const Branches = () => {
     setLoading(false);
   }, [loading]);
 
+  const showDeleteConfirm = (record) => {
+    console.log(record);
+    setSpinLoading(true);
+    confirm({
+      title: "آیا مطمئن هستید؟",
+      icon: <ExclamationCircleFilled />,
+      content: `حذف شعبه ${record.title}`,
+      okText: "بلی",
+      okType: "danger",
+      cancelText: "خیر",
+      onOk() {
+        DeleteBranch(record.id);
+      },
+      onCancel() {
+        setSpinLoading(false);
+      },
+    });
+  };
+
+  const DeleteBranch = (id) => {
+    setSpinLoading(false);
+    api_service.API_DeleteBranch(id).then((result) => {
+      if (result.data.isSuccess) {
+        openNotificationWithIcon("success", "موفق!", result.data.message);
+        setSpinLoading(true);
+        setLoading(true);
+      } else {
+        openNotificationWithIcon("error", "خطا!", result.data.message);
+      }
+    });
+  };
+
+  const changeStatus = (id) => {
+    console.log(id);
+    setSpinLoading(false);
+    api_service.API_PostBranchChangeStatus(id).then((result) => {
+      if (result.data.isSuccess) {
+        message.success(result.data.message);
+      } else {
+        message.success(result.data.message);
+      }
+    });
+  };
   return (
     <>
+      {contextHolder}
       <div>
         <Link to={`/addbranch/` + params.id} className="link-button-blue">
           افزودن شعبه جدید
@@ -124,7 +186,10 @@ export const Branches = () => {
                 marginBottom: 10,
               }}
               actions={[
-                <SettingOutlined key="setting" />,
+                <DeleteOutlined
+                  key="setting"
+                  onClick={() => showDeleteConfirm(item)}
+                />,
                 <EditOutlined key="edit" />,
                 <EllipsisOutlined key="ellipsis" />,
               ]}
@@ -144,11 +209,14 @@ export const Branches = () => {
               </div>
               <div className="mt10">
                 وضعیت:
-                {item.status ? (
-                  <span className="colorGreen">فعال</span>
-                ) : (
-                  <span className="colorRed">غیر فعال</span>
-                )}
+                <Switch
+                  style={{ marginRight: 10 }}
+                  onChange={() => changeStatus(item.id)}
+                  className="ant-switch-me"
+                  defaultChecked={item.status === true ? true : false}
+                  checkedChildren="فعال"
+                  unCheckedChildren="غیرفعال"
+                />
               </div>
             </Card>
           ))}
